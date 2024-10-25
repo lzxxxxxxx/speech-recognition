@@ -33,7 +33,6 @@ app.post('/python1', upload.single('audio'), (req, res) => {//µ÷ÓÃ±¾µØ.py£¬Ö±½Ó»
     });
 
 
-
     py.stdout.on('data', function (res) {
         let data = res.toString();
         console.log('stdout: ', data)
@@ -46,7 +45,7 @@ app.post('/python1', upload.single('audio'), (req, res) => {//µ÷ÓÃ±¾µØ.py£¬Ö±½Ó»
 });
 app.post('/python2', upload.single('audio'),(req, res) => {
     const py = spawn('D:\\PY\\python.exe', ['D:\\pycharm\\py_projects\\pythonProject6\\test.py','C: \Users\24220\source\repos\speech - recognition\speech - recognition/uploads/'+ req.file.filename]);
-    fs.unlink(path.resolve(filePath), (err) => {
+    fs.unlink(path.resolve('uploads/' + req.file.filename), (err) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Error deleting the file');
@@ -55,8 +54,9 @@ app.post('/python2', upload.single('audio'),(req, res) => {
     py.stdout.on('data', function (res) {
         let data = res.toString();
         console.log('stdout: ', data)
+        //res.end(data);
     })
-    res.end(result);
+    
 });
 
 
