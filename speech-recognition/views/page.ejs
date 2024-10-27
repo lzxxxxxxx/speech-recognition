@@ -99,6 +99,7 @@
             <button onclick="stopRecording_2()">内容_停止录音</button>
     
         <script>
+            var loc="";
 			let mediaRecorder;
             let audioChunks = [];
 
@@ -113,21 +114,26 @@
     mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         audioChunks = [];
-
-        // 发送音频数据到后端
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.wav');
 
-        const response = await fetch('/python1', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (response.ok) {
-            console.log('Audio uploaded successfully');
-        } else {
-            console.error('Error uploading audio');
-        }
+        await fetch('/python', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json(); 
+            })
+            .then(data => {
+                loc=data.content;
+                document.getElementById(loc) .style.backgroundColor = "yellow";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     };
 
     mediaRecorder.start();
@@ -150,21 +156,25 @@ async function startRecording_2() {
     mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         audioChunks = [];
-
-        // 发送音频数据到后端
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.wav');
 
-        const response = await fetch('/python2', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (response.ok) {
-            console.log('Audio uploaded successfully');
-        } else {
-            console.error('Error uploading audio');
-        }
+        await fetch('/python', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json(); 
+            })
+            .then(data => {
+                document.getElementById(loc).innerHTML = data.content;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     };
 
     mediaRecorder.start();
@@ -173,8 +183,7 @@ async function startRecording_2() {
 function stopRecording_2() {
     mediaRecorder.stop();
 }
-
-
+            
 
 		</script>
 		
