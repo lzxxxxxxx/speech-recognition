@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+       <!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8" />
@@ -90,34 +90,72 @@
                 <td id="r3c14"></td>
             </tr>
         </table>
-    
+    <b id="remind"></b>
+       <b id="test"></b>
         <br>
     
-            <button onclick="startRecording_1()">位置_开始录音</button>
-            <button onclick="stopRecording_1()">位置_停止录音</button>
-            <button onclick="startRecording_2()">内容_开始录音</button>
-            <button onclick="stopRecording_2()">内容_停止录音</button>
-    
-        <script>
-            var loc="";
-			let mediaRecorder;
-            let audioChunks = [];
 
-            async function startRecording_1() {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+           <script>
 
-            mediaRecorder.ondataavailable = event => {
-               audioChunks.push(event.data);
-             };
+           let count = 0;
+        const counterDiv = document.getElementById("test");
+        const intervalId = setInterval(() => {
+            count++;
+            counterDiv.textContent = count;
+        }, 1000);
+        window.addEventListener('load', function () {
+         document.getElementById("remind").innerHTML = "正在接听";
+            // 请求获取用户音频输入（麦克风）权限
+            navigator.mediaDevices.getUserMedia({ audio: true })
+             .then(function (stream) {
+                    let audioChunks = [];
+                    const audioContext = new AudioContext();
+                    const source = audioContext.createMediaStreamSource(stream);
+                    const analyser = audioContext.createAnalyser();
+                    source.connect(analyser);
 
-    mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        audioChunks = [];
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.wav');
+                    const mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                    };
+                   /* const audioChunks = [];
 
-        await fetch('/python', {
+                    mediaRecorder.addEventListener('dataavailable', function (event) {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    });*/
+
+                    // 开始录音
+                    mediaRecorder.start();
+                    // 用于存储音量数据的数组
+                    const volumeData = [];
+                    const sampleRate = audioContext.sampleRate;
+                    const bufferLength = analyser.frequencyBinCount;
+                    const dataArray = new Uint8Array(bufferLength);
+
+                    const checkVolumeInterval = setInterval(() => {
+                        analyser.getByteTimeDomainData(dataArray);
+                        let sum = 0;
+                        for (let i = 0; i < bufferLength; i++) {
+                            sum += dataArray[i];
+                        }
+                        const averageVolume = sum / bufferLength;
+                        volumeData.push(averageVolume);
+
+                        if (volumeData.length > sampleRate * 2) {
+                            volumeData.shift();
+                        }
+                        const isQuietForTwoSeconds = volumeData.every((volume) => volume < 130);
+                        if (isQuietForTwoSeconds) {
+                            //console.log('两秒内没说话，执行操作');
+
+                            document.getElementById("remind").innerHTML = "请稍等";
+                           const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                           const formData = new FormData();
+                           formData.append('audio', audioBlob, 'recording.wav');
+
+                            fetch('/python', {
                 method: 'POST',
                 body: formData,
             })
@@ -127,63 +165,31 @@
                 }
                 return response.json(); 
             })
-            .then(data => {
-                loc=data.content;
-                document.getElementById(loc) .style.backgroundColor = "yellow";
+            .then(data => {//then可保证同步执行
+            if(data.content=="end")
+            //停止录音
+            document.getElementById("r1c2").innerHTML = data.content;
             })
             .catch(error => {
                 console.error('Error:', error);
             });
-    };
-
-    mediaRecorder.start();
-}
-
-function stopRecording_1() {
-    mediaRecorder.stop();
-}
 
 
 
-async function startRecording_2() {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
 
-            mediaRecorder.ondataavailable = event => {
-               audioChunks.push(event.data);
-             };
-
-    mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        audioChunks = [];
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.wav');
-
-        await fetch('/python', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json(); 
-            })
-            .then(data => {
-                document.getElementById(loc).innerHTML = data.content;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-    };
-
-    mediaRecorder.start();
-}
-
-function stopRecording_2() {
-    mediaRecorder.stop();
-}
-            
+                            // 这里可以添加你想要执行的操作，比如停止录音、发送数据等
+                            clearInterval(checkVolumeInterval);
+                            // 重新开始检查音量的逻辑（这里重新启动整个流程来模拟继续录音）
+                            window.location.reload();
+                        }
+                        else
+                        alert('4')
+                    }, 2000);
+                })
+             .catch(function (error) {
+                    console.error('无法获取麦克风权限:', error);
+                });
+        });
 
 		</script>
 		

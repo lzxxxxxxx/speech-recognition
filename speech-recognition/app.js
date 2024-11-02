@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 app.set("views", "./views")
 app.set("view engine", "ejs")
-const { spawnSync } = require('child_process');
+var spawn = require('child_process').spawn;
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -17,49 +17,46 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-
-function uploadFile(req, res, next) {//函数内有next的一定参数内也要有next
-
-    upload.single('audio')(req, res, function (err) {
-        if (err) {
-            console.log("1")
-        } else {
-            next();
-        }
-    });
-
-}
-
 app.get('/', (req, res) => {
     res.render("page")
 });
-app.post('/python', uploadFile, (req, res) => {
+app.post('/python', upload.single('audio'), (req, res) => {
     console.log(req.file.filename)
-    const py = spawnSync('D:\\anaconda\\envs\\modelyy1\\python.exe', ['D:\\yuyin\\asr\\whisper-main\\test02.py', 'D:\\yuyin\\speech-recognition\\uploads\\']);
-    console.log('yes')
+    //const py = spawn('D:\\PY\\python.exe', ['D:\\pycharm\\py_projects\\pythonProject6\\test.py', 'C:\\Users\\24220\\source\\repos\\speech-recognition\\speech-recognition\\uploads']);
 
-    /*fs.unlink(path.resolve('uploads/' + req.file.filename), (err) => {//删除语音文件.wav
+   /* py.stdout.on('data', function (res) {//等python返回再删除，防止python还未完成就删了
+        let data = res.toString();
+        console.log('stdout: ', data)
+    })*/
+    /*fs.unlink(path.resolve('uploads/' + req.file.filename), (err) => {//删除语音文件wav
+       if (err) {
+           console.error(err);
+           return res.status(500).send('Error deleting the file');
+       }
+    });*/
+
+
+    fs.readFile('C:\\Users\\24220\\source\\repos\\speech-recognition\\speech-recognition\\uploads\\test.txt' , 'utf8', (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error reading file');
+        }
+        if (data == "结束")
+            res.json({ location: "end", content: "end" });
+        let location1 = data.slice(2,6)
+        let content1 = data.slice(8,data.length)
+        res.json({ location: location1, content: content1 });
+    });
+    
+    /*fs.unlink(path.resolve('uploads/' + req.file.filename.slice(0, -3) + 'txt'), (err) => {//删除结果文件txt
         if (err) {
             console.error(err);
             return res.status(500).send('Error deleting the file');
         }
     });*/
 
-
-    fs.readFile('D:\\yuyin\\speech-recognition\\uploads\\' + req.file.filename.slice(0, -3) + 'txt', 'utf8', (err, data) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('Error reading file');
-        }
-        console.log('D:\\yuyin\\speech-recognition\\uploads\\' + req.file.filename.slice(0, -3) + 'txt')
-        res.json({ content: data });
-    });
-
-    /* fs.unlink(path.resolve('uploads/' + req.file.filename .slice(0,-3)+ 'txt'), (err) => {//删除结果文件.txt
-         if (err) {
-             return res.status(500).send('Error deleting the file');
-         }
-     });*/
-
 });
 
+
+
+app.listen(1337, () => { console.log(1) });
